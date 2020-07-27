@@ -26,51 +26,48 @@ options.add_argument("disable-gpu")                                             
 #     0-upbit, 1-bithumb, 2-korbit, 3-coinone, 4-binance, 5-kucoin, 6-bittrex(announcement), 7-bittrex(coin_info), 8-bittrex(medium)
 # Crawling Function
 # boardtype = results[0], url = results[1], title = results[2], date = results[3], link = results[4], origin = results[5], link_tail = results[6], date_tail = results[7], extra = results[8]
-NumofSite = 4
+NumofSite = 9
 def Process( boardtype ):
     sql = "select * from address where boardtype=?"
     cur.execute(sql,(boardtype,))
-    results = cur.fetchall()
-    driver = webdriver.Chrome('C:/Users/sunri/chromedriver', chrome_options=options) #C:/chromedriver_win32/chromedriver  
+    results = cur.fetchone()
+    driver = webdriver.Chrome('C:/chromedriver_win32/chromedriver',chrome_options = options) #C:/chromedriver_win32/chromedriver  
     #C:/Users/sunri/chromedriver
-    driver.get( results[0][1] )
+    driver.get( results[1] )
     wait = WebDriverWait(driver, 10)
-    if( results[0][8] != None ): element = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, results[0][8])))
+    if( results[8] != None ): element = wait.until(EC.element_to_be_clickable((By.CLASS_NAME, results[8])))
     html = driver.page_source
     soup = BeautifulSoup(html, 'html.parser')
 
-    title = soup.select( results[0][2] )
-    if not title: return                                                                                                      # Can't Crwaling Case
-    origin = results[0][5]
-    if( boardtype == 4 or boardtype == 6 or boardtype == 7):
-        date = IterArticle( driver, boardtype, len(title), results[0][2], results[0][3] )
-    else: date = soup.select( results[0][3] )
-    raw_date = []
-    for i in range(len(date)):
-        raw_date.append(date[i].get_text())
-    if( boardtype == 5 ): link = IterArticle( driver, boardtype, len(title), results[0][4], '' )
-    else: link = FindStrAll( soup.select(results[0][4]), results[0][6] )
-    if( results[0][7] != None ): date = FindStrAll( date, results[0][7] )
+    origin = results[5]
+    title = soup.select( results[2] )
+    if not title: return                                                                                     # Can't Crwaling Case
+    
+    if( boardtype == 5 ): link = IterArticle( driver, boardtype, len(title), results[4], '', results[1] )
+    else: link = FindStrAll( soup.select(results[4]), results[6] )
     if( boardtype == 1 ): link = list(map(lambda text: text[15:22], link))
-    if( boardtype == 8 ): link = list(map(lambda text: text.split('?source')[0], link))
-    if( boardtype == 2 or boardtype == 6 or boardtype == 7 or boardtype == 8 ):
-        raw_date = date
-        date = list(map(lambda text: text[:10].replace("-",".",2), date))
-    if( boardtype == 4 ):
-        for i in range(len(date)):
-            date[i] = date[i].get_text()[:10].replace("-",".",2)
-    elif( boardtype == 5 ):
-        for i in range(len(date)):
-            date[i] = date[i].get_text()[:10].replace("/",".",2)
+    elif( boardtype == 8 ): link = list(map(lambda text: text.split('?source')[0], link))
+
+    if( boardtype == 4 or boardtype == 6 or boardtype == 7):
+        date = IterArticle( driver, boardtype, len(title), results[2], results[3], results[1] )
+    else: date = soup.select( results[3] )
+    if( results[7] != None ): 
+        date = FindStrAll( date, results[7] )
+    else:
+        date = list(map(lambda text: text.get_text(), date))
+    if( len(title) > len(date) ):
+        for i in range(len(title) - len(date)):
+            date.insert(0, ' ')
+    raw_date = date
+
     skipCnt = SkipCnt( boardtype, soup )
     UpdateMsg(boardtype, title, origin, link, date, skipCnt, soup, raw_date )
 
 while True:
-    conn = sqlite3.connect("C:/Users/sunri/notice/test.db") #Pro#1_Final/test.db
+    conn = sqlite3.connect("C:/Users/세환/pythonfile2/SanhakPJ1/Hexlant_subPJ2/Pro#1_Final/test.db") #C:/Users/세환/pythonfile2/SanhakPJ1/Hexlant_subPJ2/Pro#1_Final/test.db
     #C:/Users/sunri/notice/test.db
     cur = conn.cursor()
-    #for i in range(NumofSite): Process(i)
-    Process(8)
+    for i in range(NumofSite): Process(i)
     print( 'TEST END ')
     conn.close()
     time.sleep(600)                                                                                                           # 60초(1분)을 쉬어줍니다.
