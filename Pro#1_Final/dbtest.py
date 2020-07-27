@@ -31,7 +31,7 @@ def Process( boardtype ):
     sql = "select * from address where boardtype=?"
     cur.execute(sql,(boardtype,))
     results = cur.fetchone()
-    driver = webdriver.Chrome('C:/chromedriver_win32/chromedriver',chrome_options = options) #C:/chromedriver_win32/chromedriver  
+    driver = webdriver.Chrome('C:/Users/sunri/chromedriver',chrome_options = options) #C:/chromedriver_win32/chromedriver  
     #C:/Users/sunri/chromedriver
     driver.get( results[1] )
     wait = WebDriverWait(driver, 10)
@@ -64,7 +64,7 @@ def Process( boardtype ):
     UpdateMsg(boardtype, title, origin, link, date, skipCnt, soup, raw_date )
 
 while True:
-    conn = sqlite3.connect("C:/Users/세환/pythonfile2/SanhakPJ1/Hexlant_subPJ2/Pro#1_Final/test.db") #C:/Users/세환/pythonfile2/SanhakPJ1/Hexlant_subPJ2/Pro#1_Final/test.db
+    conn = sqlite3.connect("C:/Users/sunri/notice/test.db") #C:/Users/세환/pythonfile2/SanhakPJ1/Hexlant_subPJ2/Pro#1_Final/test.db
     #C:/Users/sunri/notice/test.db
     cur = conn.cursor()
     for i in range(NumofSite): Process(i)

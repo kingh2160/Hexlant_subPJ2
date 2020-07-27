@@ -19,7 +19,7 @@ def SkipCnt( boardtype, soup ):
     else: return 0
 
 def FindTopId( boardtype ):
-    con1 = sqlite3.connect("C:/Users/세환/pythonfile2/SanhakPJ1/Hexlant_subPJ2/Pro#1_Final/test.db") #C:/Users/세환/pythonfile2/SanhakPJ1/Hexlant_subPJ2/Pro#1_Final/test.db   #C:/Users/sunri/notice/test.db
+    con1 = sqlite3.connect("C:/Users/sunri/notice/test.db") #C:/Users/세환/pythonfile2/SanhakPJ1/Hexlant_subPJ2/Pro#1_Final/test.db   #C:/Users/sunri/notice/test.db
     cur1 = con1.cursor()
     sql1 = "select id from bottest where boardtype=? order by id desc"  # 현재 DB에 들어있는 가장 높은 ID값을 return, 없으면 None
     cur1.execute(sql1, (boardtype,))
@@ -54,20 +54,20 @@ def BubbleSort(ziplist):
             j+=1
     return ziplist
 
-def CompareSend(com, con2, cur2, top_id, now_id, boardtype, origin, title, link, date, completed):
+def CompareSend(com, con2, cur2, top_id, now_id, boardtype, origin, title, link, date, completed, bot1, chat_id1):
     sql2 = "insert into bottest(boardtype, title, link, date, id, completed) values (?,?,?,?,?,?)"
     sel = 'select * from bottest where id = ? and completed = ?'
     upd = 'update bottest set completed = ?, title = ? where id = ?'
     
     if( top_id == None or str(top_id)[2:-3] < now_id ):
-        # bot1.sendMessage(chat_id=chat_id1, text=title.text + ' ' + origin+link + ' ' + date )                     
+        bot1.sendMessage(chat_id=chat_id1, text=title.text + ' ' + origin+link + ' ' + date )                     
         cur2.execute(sql2,( boardtype, title.text, origin+link, date, now_id, completed ))                            
         con2.commit()
     elif( boardtype < 4 and com.search(title.text) ):
         cur2.execute(sel, (now_id, '0',))
         res = cur2.fetchone()
         if res:
-            # bot1.sendMessage(chat_id=chat_id1, text=title.text + ' ' + origin+link + ' ' + date )
+            bot1.sendMessage(chat_id=chat_id1, text=title.text + ' ' + origin+link + ' ' + date )
             cur2.execute(upd, ('1', title.text, now_id,))
             con2.commit()
     
@@ -76,7 +76,7 @@ def UpdateMsg( boardtype, title, origin, link, date, skipCnt, soup, raw_date ):
     bot1 = telegram.Bot(token='1339037346:AAHOFfZQZb5qqRV_xacyyVyhQb9-qaXWIFE')                                    # 채팅방 봇 토근
     chat_id1 = 1034101411                                                                                     # chat_id를 통해 해당 봇에게 메세지를 보내게 할 수 있음.
     #1034101411 #1339037346:AAHOFfZQZb5qqRV_xacyyVyhQb9-qaXWIFE
-    con2 = sqlite3.connect("C:/Users/세환/pythonfile2/SanhakPJ1/Hexlant_subPJ2/Pro#1_Final/test.db")
+    con2 = sqlite3.connect("C:/Users/sunri/notice/test.db")
     cur2 = con2.cursor()
     ziplist = list(zip( title, link, date, raw_date ))
     for i in range(skipCnt): ziplist.pop(0)
@@ -89,7 +89,7 @@ def UpdateMsg( boardtype, title, origin, link, date, skipCnt, soup, raw_date ):
         completed = 1 if com.search(A.text) else 0
         if IsDate(C):
             realdate = re.sub(r'\D', '.', IsDate(C).group())
-            CompareSend(com, con2, cur2, top_id, now_id, boardtype, origin, A, B, realdate, completed)
+            CompareSend(com, con2, cur2, top_id, now_id, boardtype, origin, A, B, realdate, completed, bot1, chat_id1)
 
         else:
             nowtime = datetime.datetime.now().strftime('%H:%M')
@@ -98,7 +98,7 @@ def UpdateMsg( boardtype, title, origin, link, date, skipCnt, soup, raw_date ):
             else:
                 yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
                 ymd = yesterday.strftime('%Y.%m.%d')
-            CompareSend(com, con2, cur2, top_id, now_id, boardtype, origin, A, B, ymd, completed)
+            CompareSend(com, con2, cur2, top_id, now_id, boardtype, origin, A, B, ymd, completed, bot1, chat_id1)
     con2.close()
 
 def IterArticle( driver, boardtype, length, article_tag, extra_tag, link ):
@@ -114,5 +114,5 @@ def IterArticle( driver, boardtype, length, article_tag, extra_tag, link ):
             data = driver.current_url
         dataset.append(data)
         driver.get(link)
-        time.sleep(2)
+        time.sleep(1)
     return dataset
